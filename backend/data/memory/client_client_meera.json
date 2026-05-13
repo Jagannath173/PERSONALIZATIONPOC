@@ -1,0 +1,13 @@
+{
+  "memories": [
+    {
+      "memory_id": "cpref_client_meera",
+      "client_id": "client_meera",
+      "memory_type": "client_communication_preference",
+      "content": "Meera prefers simple performance-only summaries: total value, weekly gain/loss percentage, one-line status per asset class. No jargon.",
+      "modified_by": "super_admin",
+      "updated_at": "2026-05-13T12:14:07.283540",
+      "created_at": "2026-05-13T12:14:07.283540"
+    }
+  ]
+}

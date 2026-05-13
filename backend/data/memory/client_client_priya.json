@@ -1,0 +1,13 @@
+{
+  "memories": [
+    {
+      "memory_id": "cpref_client_priya",
+      "client_id": "client_priya",
+      "memory_type": "client_communication_preference",
+      "content": "Priya prefers detailed PDF-style reports with full breakdown of each investment, performance description, risk assessment, and forward recommendations.",
+      "modified_by": "super_admin",
+      "updated_at": "2026-05-13T12:14:07.275137",
+      "created_at": "2026-05-13T12:14:07.275137"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "wealth-assistant-tests",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test":         "playwright test",
+    "test:rbac":    "playwright test regression/rbac.spec.js",
+    "test:memory":  "playwright test regression/memory.spec.js",
+    "test:client":  "playwright test regression/client-comms.spec.js",
+    "test:smoke":   "playwright test regression/smoke.spec.js",
+    "test:headed":  "playwright test --headed",
+    "report":       "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

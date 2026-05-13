@@ -1,0 +1,13 @@
+{
+  "memories": [
+    {
+      "memory_id": "cpref_client_arjun",
+      "client_id": "client_arjun",
+      "memory_type": "client_communication_preference",
+      "content": "Arjun prefers email-style summaries with clear risk highlights, rebalancing alerts, and specific stock-level commentary. Include action items.",
+      "modified_by": "super_admin",
+      "updated_at": "2026-05-13T12:14:07.278862",
+      "created_at": "2026-05-13T12:14:07.278862"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "memories": [
+    {
+      "memory_id": "cpref_client_rahul",
+      "client_id": "client_rahul",
+      "memory_type": "client_communication_preference",
+      "content": "Agent prefers Rahul's weekly update format to consist of short bullet points with simple language.",
+      "modified_by": "super_admin",
+      "updated_at": "2026-05-13T12:45:50.179866",
+      "created_at": "2026-05-13T12:14:07.271365"
+    }
+  ]
+}
