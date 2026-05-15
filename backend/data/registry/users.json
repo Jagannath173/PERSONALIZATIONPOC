@@ -1,0 +1,52 @@
+{
+  "super_admin": {
+    "user_id": "super_admin",
+    "role": "super_admin",
+    "name": "Super Admin",
+    "password": "admin123",
+    "allowed_portfolio_scope": [
+      "*"
+    ],
+    "assigned_clients": [],
+    "email": "super_admin@wealthassistant.local"
+  },
+  "emp_1": {
+    "user_id": "emp_1",
+    "role": "employee",
+    "name": "Employee 1",
+    "password": "emp123",
+    "allowed_portfolio_scope": [
+      "emp_1"
+    ],
+    "assigned_clients": [
+      "client_rahul",
+      "client_priya"
+    ],
+    "email": "emp_1@wealthassistant.local"
+  },
+  "emp_2": {
+    "user_id": "emp_2",
+    "role": "employee",
+    "name": "Employee 2",
+    "password": "emp234",
+    "allowed_portfolio_scope": [
+      "emp_2"
+    ],
+    "assigned_clients": [
+      "client_arjun",
+      "client_meera"
+    ],
+    "email": "emp_2@wealthassistant.local"
+  },
+  "sabeel": {
+    "user_id": "sabeel",
+    "role": "employee",
+    "name": "Sabeel",
+    "password": "Test@123",
+    "allowed_portfolio_scope": [
+      "sabeel"
+    ],
+    "assigned_clients": [],
+    "email": "sabeel@wealthassistant.local"
+  }
+}

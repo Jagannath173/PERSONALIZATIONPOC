@@ -4,9 +4,9 @@
       "memory_id": "cpref_client_rahul",
       "client_id": "client_rahul",
       "memory_type": "client_communication_preference",
-      "content": "Agent prefers Rahul's weekly update format to consist of short bullet points with simple language.",
+      "content": "Rahul prefers weekly investment updates in short bullet points with simple language, avoiding financial jargon. Keep it under 150 words.",
       "modified_by": "super_admin",
-      "updated_at": "2026-05-13T12:45:50.179866",
+      "updated_at": "2026-05-13T14:49:21.534199",
       "created_at": "2026-05-13T12:14:07.271365"
     }
   ]

@@ -1,3 +1,41 @@
-node_modules
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Env / secrets
 .env
-__pycache__
+.env.local
+.env.*.local
+
+# Virtualenvs
+venv/
+.venv/
+env/
+
+# Persistent state (Docker volume + local dev DBs)
+backend/data/conversations/
+backend/data/milvus_poc.db*
+backend/*.db
+
+# Launcher runtime state
+.run/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.milvus_poc.db.lock

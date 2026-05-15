@@ -1,5 +1,5 @@
 """
-Memory service — JSON-file-backed, scoped by user_id or client_id.
+Long-term memory — JSON-file-backed, scoped by user_id or client_id.
 
 Memory types:
   user_preference                  — response format preferences
@@ -12,9 +12,7 @@ import json
 import os
 import uuid
 from datetime import datetime
-from config import MEMORY_DIR
-
-os.makedirs(MEMORY_DIR, exist_ok=True)
+from app.core.config import MEMORY_DIR
 
 
 def _path(scope_type: str, scope_id: str) -> str:
@@ -44,7 +42,6 @@ def add_user_memory(user_id: str, memory_type: str, content: str) -> dict:
     data = _load(path)
     now = datetime.now().isoformat()
 
-    # Overwrite if same type already exists (idempotent preference update)
     for mem in data["memories"]:
         if mem["memory_type"] == memory_type:
             mem["content"] = content

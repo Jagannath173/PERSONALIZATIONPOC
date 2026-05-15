@@ -1,7 +1,5 @@
 """
-Milvus Lite vector store (no separate server needed).
-
-RBAC isolation is enforced at two levels:
+Milvus Lite vector store — RBAC isolation enforced at two levels:
   1. filter expression passed to search() — restricts by portfolio_owner server-side
   2. Python re-validates portfolio_owner on every returned hit (defence in depth)
 """
@@ -10,7 +8,7 @@ import uuid
 from datetime import datetime
 from pymilvus import MilvusClient, DataType
 from sentence_transformers import SentenceTransformer
-from config import MILVUS_URI, COLLECTION_NAME, EMBEDDING_DIM, EMBEDDING_MODEL
+from app.core.config import MILVUS_URI, COLLECTION_NAME, EMBEDDING_DIM, EMBEDDING_MODEL
 
 _client = None
 _embedder = None
@@ -96,7 +94,7 @@ def insert_document(
 
 def search_documents(
     query: str,
-    allowed_scopes,          # None = super_admin (all), list = agent scope
+    allowed_scopes,
     top_k: int = 6,
     client_id_filter: str = None,
 ) -> list:
@@ -128,7 +126,6 @@ def search_documents(
         for hit in hits:
             entity = hit["entity"]
             owner = entity.get("portfolio_owner", "")
-            # Defence-in-depth: validate scope after Milvus filter
             if allowed_scopes is not None and owner not in allowed_scopes:
                 continue
             results.append({

@@ -1,0 +1,22 @@
+{
+  "client_rahul": {
+    "client_id": "client_rahul",
+    "name": "Rahul",
+    "assigned_employee": "emp_1"
+  },
+  "client_priya": {
+    "client_id": "client_priya",
+    "name": "Priya",
+    "assigned_employee": "emp_1"
+  },
+  "client_arjun": {
+    "client_id": "client_arjun",
+    "name": "Arjun",
+    "assigned_employee": "emp_2"
+  },
+  "client_meera": {
+    "client_id": "client_meera",
+    "name": "Meera",
+    "assigned_employee": "emp_2"
+  }
+}

@@ -1,7 +1,9 @@
+"""Long-term memory endpoints — preferences scoped per user / client."""
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import services.rbac as rbac
-import services.memory as memory
+
+from app.services import memory, rbac
 
 router = APIRouter()
 

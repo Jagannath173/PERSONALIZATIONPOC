@@ -1,145 +1,177 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import MessageBubble from './MessageBubble'
-import { api } from '../api/client'
+import { useSuggestions } from '../hooks/useSuggestions'
 
-const QUICK = {
-  super_admin: [
-    'Compare Agent 1 and Agent 2 portfolios',
-    'Generate weekly reports for all agents',
-    "Set Rahul's weekly update format to short bullet points with simple language",
-    "Generate Rahul's weekly investment update",
-    'I prefer executive summaries with comparison tables',
-  ],
-  agent_1: [
-    'Show my portfolio summary',
-    "Show me Agent 2's portfolio",
-    'From now on, give me portfolio answers in bullet points',
-    'Update my portfolio: Client Rahul has Rs 22L in mutual funds now',
-    "Generate Priya's weekly investment update",
-    "Change Rahul's communication preference to detailed PDF",
-  ],
-  agent_2: [
-    'Show my portfolio summary',
-    'I prefer detailed explanations with risks and recommendations',
-    'Update my portfolio: Client Arjun added Rs 5L in bonds',
-    "Generate Arjun's weekly investment update",
-    'What is my total AUM across all clients?',
-  ],
-}
+export default function Chat({
+  currentUser,
+  bankName,
+  conversation,
+  onOpenSettings,
+}) {
+  const { messages, loading, sending, error, send } = conversation
 
-export default function Chat({ currentUser, bankName, onContextUpdate, onMemoryUpdate }) {
-  const [messages, setMessages]  = useState([])
-  const [input, setInput]        = useState('')
-  const [loading, setLoading]    = useState(false)
+  const { suggestions, loading: sLoading, refresh: refreshSuggestions } =
+    useSuggestions(currentUser)
+
+  const DEFAULT_SUGGESTIONS = [
+    'Give me an overview of my client portfolio.',
+    'Which of my clients need a follow-up this week?',
+    'Summarize recent interactions with my top clients.',
+    'What action items are pending across my accounts?',
+    'Show me clients with the highest risk exposure.',
+    'Draft a check-in note for a client I haven’t spoken to lately.',
+  ]
+  const displayedSuggestions = suggestions.length > 0 ? suggestions : DEFAULT_SUGGESTIONS
+
+  const [input, setInput] = useState('')
+  const [lastDocCount, setLastDocCount] = useState(0)
   const endRef   = useRef(null)
   const inputRef = useRef(null)
-  const prevUser = useRef(null)
 
-  useEffect(() => {
-    if (currentUser?.user_id !== prevUser.current) {
-      setMessages([])
-      onContextUpdate([])
-      prevUser.current = currentUser?.user_id
-    }
-  }, [currentUser])
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, sending])
+  useEffect(() => { inputRef.current?.focus() }, [currentUser])
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
-
-  const history = () => messages.map(m => ({ role: m.role, content: m.content }))
-
-  const send = async (text) => {
-    const msg = (text || input).trim()
-    if (!msg || !currentUser || loading) return
-    setMessages(prev => [...prev, { role:'user', content:msg, timestamp: new Date().toISOString() }])
+  const submit = (text) => {
+    const msg = text ?? input
+    if (!msg?.trim()) return
+    send(msg)
     setInput('')
-    setLoading(true)
-    try {
-      const res = await api.chat(currentUser.user_id, msg, history())
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: res.response,
-        intent: res.intent,
-        access_denied: res.access_denied,
-        memory_updated: res.memory_updated,
-        timestamp: new Date().toISOString(),
-      }])
-      onContextUpdate(res.retrieved_context || [])
-      if (res.memory_updated) onMemoryUpdate()
-    } catch (err) {
-      setMessages(prev => [...prev, {
-        role:'assistant', content:`Error: ${err.message}`, access_denied:true,
-        timestamp: new Date().toISOString(),
-      }])
-    } finally {
-      setLoading(false)
-      inputRef.current?.focus()
-    }
   }
 
-  const onKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
+  const onKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() }
+  }
 
-  const quickPrompts = currentUser ? (QUICK[currentUser.user_id] || []) : []
+  const hasHistory = messages.length > 0
 
-  if (!currentUser)
+  // Track how many docs the last assistant turn retrieved (for the ribbon chip)
+  useEffect(() => {
+    if (!hasHistory) return
+    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
+    if (!lastAssistant) return
+    // useConversation surfaces docs via onContextUpdate — we can't read here,
+    // so we track length passively via a separate prop if needed. For now,
+    // expose the indicator only when the right panel is in use.
+  }, [messages, hasHistory])
+
+  if (!currentUser) {
     return (
-      <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div className="chat-empty">
         <div className="welcome-banner">
-          <div className="welcome-icon">🔐</div>
+          <div className="welcome-icon" aria-hidden>🔐</div>
           <div className="welcome-title">{bankName || 'Wealth Assistant'}</div>
-          <div className="welcome-sub">Select a role from the left panel to begin your secure session</div>
+          <div className="welcome-sub">Sign in to start a secure session.</div>
         </div>
       </div>
     )
+  }
 
   return (
     <>
       <div className="chat-msgs">
-        {messages.length === 0 && (
-          <div style={{ display:'flex', justifyContent:'center', padding:'32px 0' }}>
-            <div className="welcome-banner" style={{ padding:'32px 24px' }}>
-              <div className="welcome-icon">💬</div>
-              <div className="welcome-title" style={{ fontSize:17 }}>Hello, {currentUser.name}</div>
-              <div className="welcome-sub">How can I assist you today? Try a quick prompt below.</div>
-            </div>
-          </div>
-        )}
-
-        {messages.map((m, i) => <MessageBubble key={i} message={m} currentUser={currentUser} />)}
-
         {loading && (
-          <div className="msg-row assistant">
-            <div className="msg-av assistant">🤖</div>
-            <div className="msg-bubble">
-              <span className="dot"/><span className="dot"/><span className="dot"/>
+          <div className="chat-skeleton" aria-busy="true">
+            <div className="skeleton-line w-60" />
+            <div className="skeleton-line w-80" />
+            <div className="skeleton-line w-40" />
+          </div>
+        )}
+
+        {!loading && !hasHistory && (
+          <div className="welcome-stack">
+            <div className="welcome-banner">
+              <div className="welcome-icon" aria-hidden>💬</div>
+              <div className="welcome-title">Hello, {currentUser.name}</div>
+              <div className="welcome-sub">
+                I remember our prior conversations and can only see data within your access scope.
+                Pick a suggestion below or ask anything.
+              </div>
             </div>
           </div>
         )}
-        <div ref={endRef}/>
+
+        {messages.map((m, i) => (
+          <MessageBubble key={m.id || i} message={m} currentUser={currentUser} />
+        ))}
+
+        {sending && (
+          <div className="msg-row assistant">
+            <div className="msg-av assistant" aria-hidden>AI</div>
+            <div className="msg-bubble typing">
+              <span className="dot" /><span className="dot" /><span className="dot" />
+            </div>
+          </div>
+        )}
+
+        <div ref={endRef} />
       </div>
 
       <div className="input-area">
-        {quickPrompts.length > 0 && messages.length === 0 && (
-          <div className="quick-wrap">
-            {quickPrompts.map(p => (
-              <button key={p} className="quick-btn" onClick={() => send(p)}>
-                {p.length > 48 ? p.slice(0,45)+'…' : p}
+        {!loading && !input.trim() && (
+          <div className="suggestions">
+            <div className="suggestions-hd">
+              <span>{hasHistory ? 'Try asking' : 'Suggested for you'}</span>
+              <button
+                type="button"
+                className="suggestions-refresh"
+                onClick={refreshSuggestions}
+                disabled={sLoading || sending}
+                title="Regenerate suggestions"
+              >
+                {sLoading ? 'Generating…' : '↻ refresh'}
               </button>
-            ))}
+            </div>
+
+            {sLoading && suggestions.length === 0 ? (
+              <div className="suggestions-skeleton">
+                <div className="skeleton-pill" />
+                <div className="skeleton-pill w-65" />
+                <div className="skeleton-pill w-75" />
+                <div className="skeleton-pill w-55" />
+              </div>
+            ) : (
+              <div className="quick-wrap">
+                {displayedSuggestions.slice(0, 6).map((s, i) => (
+                  <button
+                    key={`${i}-${s}`}
+                    type="button"
+                    className="quick-btn"
+                    onClick={() => submit(s)}
+                    disabled={sending}
+                    title={s}
+                  >
+                    {s.length > 64 ? s.slice(0, 61) + '…' : s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
+
+        {error && <div className="error-banner">⚠ {error}</div>}
+
         <div className="input-row">
           <textarea
             ref={inputRef}
             className="input-box"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKey}
-            placeholder={`Message as ${currentUser.name}… (Enter to send)`}
+            placeholder={`Message as ${currentUser.name}…  (Enter to send · Shift+Enter for newline)`}
             rows={1}
-            disabled={loading}
+            disabled={sending}
           />
-          <button className="send-btn" onClick={() => send()} disabled={loading || !input.trim()}>
-            ➤
+          <button
+            type="button"
+            className="send-btn"
+            onClick={() => submit()}
+            disabled={sending || !input.trim()}
+            aria-label="Send message"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                 strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </button>
         </div>
       </div>

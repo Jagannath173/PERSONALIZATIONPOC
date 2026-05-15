@@ -1,8 +1,11 @@
+"""Portfolio endpoints — document insert / search with RBAC enforcement."""
+
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
-import services.rbac as rbac
-import services.vector as vector
+
+from app.services import rbac, vector
 
 router = APIRouter()
 

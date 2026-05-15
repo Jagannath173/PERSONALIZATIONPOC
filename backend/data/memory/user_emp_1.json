@@ -1,0 +1,12 @@
+{
+  "memories": [
+    {
+      "memory_id": "mem_emp_1_8960f1",
+      "user_id": "emp_1",
+      "memory_type": "user_preference",
+      "content": "User prefers metrics in tabular format.",
+      "created_at": "2026-05-13T16:20:15.997907",
+      "updated_at": "2026-05-13T16:20:15.997907"
+    }
+  ]
+}

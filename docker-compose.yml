@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Secure Personalized Wealth Assistant — full stack
+#
+#   backend   FastAPI (RBAC RAG + persistent shared memory)
+#   frontend  React (Vite build, served via nginx)
+#   volumes   shared-memory & vector DB persisted on host
+#
+#   Run:    docker compose up --build
+#   Open:   http://localhost
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wealth-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATA_DIR: /app/data
+      MILVUS_DB_PATH: /app/data/milvus_poc.db
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://frontend"
+    volumes:
+      # Shared memory — survives container restarts. Edit on host, read in
+      # container; this is the "remember the user's context" backbone.
+      - wealth-data:/app/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    networks:
+      - wealth-net
+
+  seed:
+    # One-shot job that populates Milvus + client preferences on first boot.
+    # Use:  docker compose run --rm seed
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wealth-seed
+    env_file:
+      - ./backend/.env
+    environment:
+      DATA_DIR: /app/data
+      MILVUS_DB_PATH: /app/data/milvus_poc.db
+    volumes:
+      - wealth-data:/app/data
+    command: ["python", "-m", "app.scripts.seed_data"]
+    depends_on:
+      - backend
+    profiles: ["seed"]
+    networks:
+      - wealth-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wealth-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - wealth-net
+
+volumes:
+  wealth-data:
+    name: wealth-data
+
+networks:
+  wealth-net:
+    name: wealth-net
+    driver: bridge

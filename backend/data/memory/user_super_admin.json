@@ -1,0 +1,12 @@
+{
+  "memories": [
+    {
+      "memory_id": "mem_super_admin_660e96",
+      "user_id": "super_admin",
+      "memory_type": "user_preference",
+      "content": "User prefers comparisons to be presented as bar charts.",
+      "created_at": "2026-05-13T14:50:10.464553",
+      "updated_at": "2026-05-13T14:56:19.451730"
+    }
+  ]
+}

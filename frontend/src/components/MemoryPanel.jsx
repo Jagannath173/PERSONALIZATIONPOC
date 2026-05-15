@@ -1,67 +1,88 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client'
 
-export default function MemoryPanel({ currentUser }) {
+export default function MemoryPanel({ currentUser, refreshKey }) {
   const [data, setData] = useState(null)
+  const [convSummary, setConvSummary] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!currentUser) return
     setLoading(true)
-    try { setData(await api.getMemory(currentUser.user_id)) }
-    catch (e) { console.error(e) }
-    finally { setLoading(false) }
-  }
+    try {
+      const [mem, conv] = await Promise.all([
+        api.getMemory(currentUser.user_id),
+        api.getConversationSummary(currentUser.user_id).catch(() => null),
+      ])
+      setData(mem)
+      setConvSummary(conv)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [currentUser])
 
-  useEffect(() => { load() }, [currentUser])
+  useEffect(() => { load() }, [load, refreshKey])
 
-  if (!currentUser) return <div className="empty">Select a role to view memory</div>
+  if (!currentUser) return <div className="empty">Select a user to view memory</div>
   if (loading)      return <div className="empty">Loading…</div>
 
   const userMems    = data?.user_memories || []
   const clientPrefs = data?.client_preferences || {}
 
   return (
-    <div>
-      <div className="s-label">User Memory ({currentUser.name})</div>
+    <div className="mem-stack">
+      {convSummary && (
+        <div className="mem-card mem-card-conv">
+          <div className="mem-card-row">
+            <span className="mem-card-key">Persistent turns</span>
+            <span className="mem-card-val">{convSummary.message_count ?? 0}</span>
+          </div>
+          {convSummary.last_message_at && (
+            <div className="mem-card-row">
+              <span className="mem-card-key">Last activity</span>
+              <span className="mem-card-val">
+                {new Date(convSummary.last_message_at).toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
+      <div className="s-label">
+        {currentUser.role === 'super_admin' ? 'Admin' : 'Employee'} preferences — {currentUser.name}
+      </div>
       {userMems.length === 0
-        ? <div className="empty" style={{ padding: '10px 0' }}>No stored memories yet</div>
+        ? <div className="empty">No stored memories yet</div>
         : userMems.map((m) => (
             <div key={m.memory_id} className="mem-item">
-              <div><span className={`mem-badge ${m.memory_type}`}>{m.memory_type.replace(/_/g,' ')}</span></div>
+              <span className={`mem-badge ${m.memory_type}`}>
+                {m.memory_type.replace(/_/g, ' ')}
+              </span>
               <div className="mem-content">{m.content}</div>
-              <div style={{ fontSize:10, color:'var(--faint)', marginTop:3 }}>
-                {new Date(m.updated_at).toLocaleDateString()}
-              </div>
+              <div className="mem-date">{new Date(m.updated_at).toLocaleDateString()}</div>
             </div>
           ))}
 
       {currentUser.role === 'super_admin' && (
         <>
-          <div className="s-label" style={{ marginTop: 16 }}>Client Communication Prefs</div>
+          <div className="s-label" style={{ marginTop: 18 }}>Client Communication Prefs</div>
           {Object.keys(clientPrefs).length === 0
-            ? <div className="empty" style={{ padding: '10px 0' }}>None set yet</div>
+            ? <div className="empty">None set yet</div>
             : Object.entries(clientPrefs).map(([cid, pref]) => (
                 <div key={cid} className="mem-item">
-                  <div>
-                    <span className="mem-badge client_communication_preference">
-                      {cid.replace('client_','')}
-                    </span>
-                  </div>
+                  <span className="mem-badge client_communication_preference">
+                    {cid.replace('client_', '')}
+                  </span>
                   <div className="mem-content">{pref.content}</div>
-                  <div style={{ fontSize:10, color:'var(--faint)', marginTop:3 }}>
-                    by {pref.modified_by}
-                  </div>
+                  <div className="mem-date">by {pref.modified_by}</div>
                 </div>
               ))}
         </>
       )}
 
-      <button
-        onClick={load}
-        style={{ marginTop:10, width:'100%', padding:'7px', background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, color:'var(--muted)', cursor:'pointer', fontSize:12 }}
-      >
+      <button type="button" onClick={load} className="mem-refresh">
         Refresh
       </button>
     </div>
